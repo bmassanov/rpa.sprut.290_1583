@@ -1,0 +1,14 @@
+*__pycache__
+*__temp__
+*__logs__
+*.idea
+
+/venv/
+/downloads/
+/logs/
+/serialisation/
+/tasks/
+
+/.env
+/pass.txt
+/trash/
