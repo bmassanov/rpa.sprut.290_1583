@@ -522,6 +522,7 @@ class Excel:
         row_index = self.find(data['branch'])[0][0]
         col_index = self.find(data['month'])[0][1]
         print(list(data['values'].keys()))
+        self.ws.cell(row_index, 1).value = data['index']
         self.ws.cell(row_index, col_index).number_format = '# ##0'
         self.ws.cell(row_index, col_index).value = data['values'][list(data['values'].keys())[0]]
         self.ws.cell(row_index + 1, col_index).number_format = '# ##0'

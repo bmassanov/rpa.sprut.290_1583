@@ -12,7 +12,7 @@ for n, xl_list in enumerate(parse_excel()):
         logger.info(str(_1583))
         _290 = export_290(obj)
         logger.info(str(_290))
-        fill_excel(_1583, _290, n)
+        fill_excel(_1583, _290, obj)
         setto_serialisation(obj)
     except Exception as e:
         logger.exception(str(e))
