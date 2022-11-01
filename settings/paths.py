@@ -13,8 +13,8 @@ logs_path.mkdir(exist_ok=True)
 downloads_path = project_path.joinpath('downloads')
 downloads_path.mkdir(exist_ok=True)
 
-serialisation_path = project_path.joinpath('serialisation')
-serialisation_path.mkdir(exist_ok=True)
+# serialisation_path = project_path.joinpath('serialisation')
+# serialisation_path.mkdir(exist_ok=True)
 
 app_path = r'C:\SPRUT\Modules3.5\sprut.exe'
 template_path = root_path.joinpath('settings\\codes.xlsx')

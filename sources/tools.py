@@ -1,6 +1,5 @@
 import ctypes
 import shutil
-from os import environ
 from pathlib import Path
 from time import sleep
 from typing import Iterable
@@ -8,10 +7,9 @@ from typing import Iterable
 import xlrd
 from openpyxl import load_workbook, Workbook
 
-from settings.logger import logger
-from settings.paths import app_path, serialisation_path
+from settings.paths import app_path
 from settings.settings import app_login, app_pass, app_base
-from sources.rpamini import App, Clipboard, Json
+from sources.rpamini import App, Clipboard
 
 D_TIMEOUT = 50.0
 current_cursor = 0
@@ -47,7 +45,7 @@ class Sprut(App):
         self.app_pass = app_pass
         self.app = self.execute()
 
-        self.serialisation_path = serialisation_path.joinpath(f'{environ.get("iteration")}.json')
+        # self.serialisation_path = serialisation_path.joinpath(f'{environ.get("iteration")}.json')
         self.serialisation = {}
         self.title = None
 
@@ -127,16 +125,16 @@ class Sprut(App):
 
     # ? SERIALISATION
 
-    def serialisation_write(self, key, value):
-        if self.serialisation_path.is_file():
-            self.serialisation = Json.read(self.serialisation_path.__str__())
-        self.serialisation[key] = value
-        Json.write(self.serialisation_path.__str__(), self.serialisation)
-
-    def serialisation_read(self):
-        if self.serialisation_path.is_file():
-            self.serialisation = Json.read(self.serialisation_path.__str__())
-        return self.serialisation
+    # def serialisation_write(self, key, value):
+    #     if self.serialisation_path.is_file():
+    #         self.serialisation = Json.read(self.serialisation_path.__str__())
+    #     self.serialisation[key] = value
+    #     Json.write(self.serialisation_path.__str__(), self.serialisation)
+    #
+    # def serialisation_read(self):
+    #     if self.serialisation_path.is_file():
+    #         self.serialisation = Json.read(self.serialisation_path.__str__())
+    #     return self.serialisation
 
     # ? SYSTEM
 
@@ -187,7 +185,6 @@ class Sprut(App):
         return value_
 
     def set_input(self, index, value):
-        logger.info(value)
         selector_ = [{"class_name": "TfrmParams", "index": 0},
                      {"control_type": "Edit", "index": index}]
         element_ = self.find_element(selector_)
@@ -204,7 +201,6 @@ class Sprut(App):
         return value_, value
 
     def set_select(self, index, value):
-        logger.info(value)
         original_selector_ = [{"class_name": "TfrmParams", "index": 0},
                               {"control_type": "Edit", "index": index}]
         original_value = self.find_element(original_selector_).iface_value.CurrentValue
@@ -264,7 +260,6 @@ class Sprut(App):
         self.find_element(selector_).click_input()
 
         for param in params:
-            logger.info(str(param[2]))
             selector_ = [{"class_name": "Tvms_search_fm_builder", "index": 0},
                          {"control_type": "Pane", "index": 8}]
             self.find_element(selector_).click_input()
@@ -483,12 +478,14 @@ class Excel:
         else:
             self.wb = Workbook()
             self.wb.active.title = self.sheet_name
+            self.save()
         if self.sheet_name is not None:
             if self.sheet_name in self.wb.sheetnames:
                 self.ws = self.wb[self.sheet_name]
             else:
                 self.wb.create_sheet(self.sheet_name)
                 self.ws = self.wb[self.sheet_name]
+                self.save()
         else:
             self.ws = self.wb.active
 
@@ -505,10 +502,10 @@ class Excel:
         return self
 
     def add_branch(self, branch, values, index):
-        rows = [row[1] for row in list(self.ws.values)]
-        if branch not in rows:
+        rows = [row[0] for row in list(self.ws.values) if row[0]]
+        if index not in rows:
             last_index = self.ws.max_row
-            self.ws.cell(last_index + 1, 1).value = int(index) + 1
+            self.ws.cell(last_index + 1, 1).value = int(index)
             self.ws.merge_cells(start_row=last_index + 1, start_column=1, end_row=last_index + 3, end_column=1)
             self.ws.cell(last_index + 1, 2).value = branch
             self.ws.merge_cells(start_row=last_index + 1, start_column=2, end_row=last_index + 3, end_column=2)
@@ -519,10 +516,9 @@ class Excel:
 
     def fill(self, data):
         self.add_branch(data['branch'], data['values'], data['index'])
-        row_index = self.find(data['branch'])[0][0]
+        row_index = self.find(data['index'])[0][0]
         col_index = self.find(data['month'])[0][1]
         print(list(data['values'].keys()))
-        self.ws.cell(row_index, 1).value = data['index']
         self.ws.cell(row_index, col_index).number_format = '# ##0'
         self.ws.cell(row_index, col_index).value = data['values'][list(data['values'].keys())[0]]
         self.ws.cell(row_index + 1, col_index).number_format = '# ##0'
@@ -543,7 +539,8 @@ class Excel:
         self.ws.cell(row=row, column=col).value = value
 
     def save(self):
-        shutil.copy(self.file_path.__str__(), self.file_path.__str__().replace('.xlsx', '_b.xlsx'))
+        if Path(self.file_path).is_file():
+            shutil.copy(self.file_path.__str__(), self.file_path.__str__().replace('.xlsx', '_b.xlsx'))
         return self.wb.save(self.file_path)
 
     def close(self):

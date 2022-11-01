@@ -1,15 +1,14 @@
 from datetime import datetime
 
-from settings.logger import logger
-from settings.paths import downloads_path, codes_path, report_path, serialisation_path
+from settings.paths import downloads_path, codes_path, report_path
 from settings.settings import report_month, start_date, end_date
-from sources.rpamini import App, Json
+from sources.rpamini import App
 from sources.tools import Sprut, Xls, Excel
 
 # date = datetime(datetime.today().year, datetime.today().month, 1) - timedelta(days=1)
 # date = datetime(datetime.today().year, datetime.today().month, 28)
 
-serialisation_file = serialisation_path.joinpath(f'{datetime.today().year}.{report_month}.json')
+# serialisation_file = serialisation_path.joinpath(f'{datetime.today().year}.{report_month}.json')
 MONTHS = [
     'Январь',
     'Февраль',
@@ -31,23 +30,23 @@ VALUES = [
 ]
 
 
-def check_serialisation(name):
-    if serialisation_file.is_file():
-        if name in Json.read(serialisation_file):
-            return True
-        else:
-            return False
-    else:
-        return False
+# def check_serialisation(name):
+#     if serialisation_file.is_file():
+#         if name in Json.read(serialisation_file):
+#             return True
+#         else:
+#             return False
+#     else:
+#         return False
 
 
-def setto_serialisation(name):
-    if serialisation_file.is_file():
-        data = Json.read(serialisation_file)
-    else:
-        data = list()
-    data.append(name)
-    Json.write(serialisation_file, data)
+# def setto_serialisation(name):
+#     if serialisation_file.is_file():
+#         data = Json.read(serialisation_file)
+#     else:
+#         data = list()
+#     data.append(name)
+#     Json.write(serialisation_file, data)
 
 
 def export_1583(object_code: int):
@@ -132,11 +131,11 @@ def export_290(object_code: int):
 def parse_excel():
     xlsx = Excel(codes_path)
     rows = [row for row in list(xlsx.ws.values)]
-    list_ = [(int(row[4]), int(row[3])) for row in rows if 'торговый зал' in str(row[2]).lower()]
+    list_ = [(int(row[4]), int(row[3]), row[0]) for row in rows if 'торговый зал' in str(row[2]).lower()]
     return list_
 
 
-def fill_excel(path_1583, path_290, branch_index):
+def fill_excel(path_1583, path_290, branch_index, name):
     data = dict()
     xls = Xls(path_1583.__str__())
     result = {
@@ -145,6 +144,8 @@ def fill_excel(path_1583, path_290, branch_index):
         'index': branch_index,
         'values': None
     }
+    if result['branch'] == 'Компания':
+        result['branch'] = name
     data[VALUES[0]] = int(xls.get(xls.find('Итого:')[0][0], xls.find('Оборот, тг без НДС')[0][1]) / 1000)
     data[VALUES[1]] = int(data["Всего"] - data["Всего"] * 0.15)
     xls = Xls(path_290.__str__())
@@ -160,14 +161,4 @@ def fill_excel(path_1583, path_290, branch_index):
 
 
 if __name__ == '__main__':
-    start_time = datetime.now().replace(microsecond=0)
-    logger.info('=== START ===')
-    for n, xl_list in enumerate(parse_excel()):
-        obj, tz = xl_list[0], xl_list[1]
-        if check_serialisation(obj):
-            continue
-        _1583 = r"C:\Users\ASSANOV.B\rpa.sprut.290_1583\downloads\1583_945.xls"
-        _290 = r"C:\Users\ASSANOV.B\rpa.sprut.290_1583\downloads\290_815.xls"
-        fill_excel(_1583, _290, n)
-        setto_serialisation(obj)
-    logger.info(f'=== END === {(datetime.now().replace(microsecond=0) - start_time)}')
+    pass
