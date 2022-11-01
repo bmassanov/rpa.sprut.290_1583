@@ -516,9 +516,13 @@ class Excel:
 
     def fill(self, data):
         self.add_branch(data['branch'], data['values'], data['index'])
-        row_index = self.find(data['index'])[0][0]
-        col_index = self.find(data['month'])[0][1]
+        row_ = self.find(data['index'], col_index=1)
+        col_ = self.find(data['month'], row_index=1)
+        row_index = row_[0][0]
+        col_index = col_[0][1]
         print(list(data['values'].keys()))
+        if data['index'] == 777:
+            print()
         self.ws.cell(row_index, col_index).number_format = '# ##0'
         self.ws.cell(row_index, col_index).value = data['values'][list(data['values'].keys())[0]]
         self.ws.cell(row_index + 1, col_index).number_format = '# ##0'
@@ -527,12 +531,16 @@ class Excel:
         self.ws.cell(row_index + 2, col_index).value = data['values'][list(data['values'].keys())[2]]
         self.save()
 
-    def find(self, value):
+    def find(self, value, row_index=None, col_index=None):
         rows = [row for row in list(self.ws.values)]
         pairs = list()
         for n, row in enumerate(rows):
             col_indexes = [(n + 1, i + 1) for i, x in enumerate(row) if x == value]
             pairs = [*pairs, *col_indexes]
+        if row_index:
+            pairs = [pair for pair in pairs if pair[0] == row_index]
+        if col_index:
+            pairs = [pair for pair in pairs if pair[1] == col_index]
         return pairs
 
     def set(self, row, col, value):
