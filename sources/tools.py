@@ -491,7 +491,6 @@ class Excel:
                 self.ws = self.wb[self.sheet_name]
         else:
             self.ws = self.wb.active
-        self.wb.save(self.file_path)
 
     def __del__(self):
         self.wb.close()
@@ -502,7 +501,7 @@ class Excel:
             return self
         for n, month in enumerate(months):
             self.ws.cell(1, n + 4).value = month
-        self.wb.save(self.file_path)
+        self.save()
         return self
 
     def add_branch(self, branch, values, index):
@@ -515,7 +514,7 @@ class Excel:
             self.ws.merge_cells(start_row=last_index + 1, start_column=2, end_row=last_index + 3, end_column=2)
             for n, key in enumerate(values.keys()):
                 self.ws.cell(last_index + 1 + n, 3).value = key
-            self.wb.save(self.file_path)
+            self.save()
         return self
 
     def fill(self, data):
@@ -529,7 +528,7 @@ class Excel:
         self.ws.cell(row_index + 1, col_index).value = data['values'][list(data['values'].keys())[1]]
         self.ws.cell(row_index + 2, col_index).number_format = '# ##0'
         self.ws.cell(row_index + 2, col_index).value = data['values'][list(data['values'].keys())[2]]
-        self.wb.save(self.file_path)
+        self.save()
 
     def find(self, value):
         rows = [row for row in list(self.ws.values)]
@@ -543,7 +542,7 @@ class Excel:
         self.ws.cell(row=row, column=col).value = value
 
     def save(self):
-        shutil.copy(self.file_path, self.file_path.replace('.xlsx', '_b.xlsx'))
+        shutil.copy(self.file_path.__str__(), self.file_path.__str__().replace('.xlsx', '_b.xlsx'))
         return self.wb.save(self.file_path)
 
     def close(self):

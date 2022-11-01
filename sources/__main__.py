@@ -1,14 +1,15 @@
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime
 
 from settings.logger import logger
 from settings.paths import downloads_path, codes_path, report_path, serialisation_path
+from settings.settings import report_month, start_date, end_date
 from sources.rpamini import App, Json
 from sources.tools import Sprut, Xls, Excel
 
 # date = datetime(datetime.today().year, datetime.today().month, 1) - timedelta(days=1)
-date = datetime(datetime.today().year, datetime.today().month, 28)
-serialisation_file = serialisation_path.joinpath(f'{date.year}.{date.month}.json')
+# date = datetime(datetime.today().year, datetime.today().month, 28)
+
+serialisation_file = serialisation_path.joinpath(f'{datetime.today().year}.{report_month}.json')
 MONTHS = [
     'Январь',
     'Февраль',
@@ -50,12 +51,16 @@ def setto_serialisation(name):
 
 
 def export_1583(object_code: int):
+    value_ = f'{report_month}_1583_{object_code}.xls'
+    path_ = downloads_path.joinpath(value_)
+    if path_.is_file():
+        return path_
     sprut = Sprut()
     sprut.authorize().open_module('Отчеты')
     sprut.search(1, 0, 2202)
     sprut.get_pane(1).type_keys(sprut.Keys.F9)
-    sprut.set_input(6, date.strftime('01.%m.%Y'))
-    sprut.set_input(4, date.strftime('%d.%m.%Y'))
+    sprut.set_input(6, start_date)
+    sprut.set_input(4, end_date)
     sprut.set_select(3, 'Весь период')
     sprut.set_multiselect(2, [(0, 0, object_code, True)])
     selector_ = [{"class_name": "TfrmParams", "index": 0},
@@ -73,8 +78,6 @@ def export_1583(object_code: int):
     selector_ = [{"control_type": "Window", "class_name": "XLMAIN", "index": 0},
                  {"control_type": "Edit", "class_name": "Edit", "index": 0}]
     element_ = App.find_element(selector_)
-    value_ = f'1583_{object_code}.xls'
-    path_ = downloads_path.joinpath(value_)
     element_.type_keys(path_.__str__() + App.Keys.ENTER)
 
     selector_ = [{"control_type": "Window", "class_name": "XLMAIN", "index": 0},
@@ -89,14 +92,18 @@ def export_1583(object_code: int):
 
 
 def export_290(object_code: int):
+    value_ = f'{report_month}_290_{object_code}.xls'
+    path_ = downloads_path.joinpath(value_)
+    if path_.is_file():
+        return path_
     sprut = Sprut()
     sprut.authorize().open_module('Отчеты')
     sprut.search(1, 0, 2360)
     sprut.get_pane(1).type_keys(sprut.Keys.F9)
     sprut.set_multiselect(11, [(5, 2, object_code, True)])
     sprut.set_select(10, 'Нет')
-    sprut.set_input(8, date.strftime('01.%m.%Y'))
-    sprut.set_input(6, date.strftime('%d.%m.%Y'))
+    sprut.set_input(8, start_date)
+    sprut.set_input(6, end_date)
     sprut.set_select(5, 'Все товары [2]')
     selector_ = [{"class_name": "TfrmParams", "index": 0},
                  {"title": "Ввод", "control_type": "Button", "index": 0}]
@@ -109,8 +116,6 @@ def export_290(object_code: int):
     selector_ = [{"control_type": "Window", "class_name": "XLMAIN", "index": 0},
                  {"control_type": "Edit", "class_name": "Edit", "index": 0}]
     element_ = App.find_element(selector_)
-    value_ = f'290_{object_code}.xls'
-    path_ = downloads_path.joinpath(value_)
     element_.type_keys(path_.__str__() + App.Keys.ENTER)
 
     selector_ = [{"control_type": "Window", "class_name": "XLMAIN", "index": 0},
@@ -135,7 +140,7 @@ def fill_excel(path_1583, path_290, branch_index):
     data = dict()
     xls = Xls(path_1583.__str__())
     result = {
-        'month': MONTHS[date.month - 1],
+        'month': MONTHS[report_month - 1],
         'branch': xls.get(xls.find('Итого:')[0][0] - 1, xls.find('Компания')[0][1]),
         'index': branch_index,
         'values': None
@@ -148,7 +153,7 @@ def fill_excel(path_1583, path_290, branch_index):
     data[VALUES[2]] = int((_290_2 - _290_1) / 1000)
     result['values'] = data
 
-    xlsx = Excel(report_path, str(date.year))
+    xlsx = Excel(report_path, str(datetime.today().year))
     xlsx.init(MONTHS)
     print(result)
     xlsx.fill(result)

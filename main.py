@@ -8,8 +8,6 @@ logger.info('=== START ===')
 for n, xl_list in enumerate(parse_excel()):
     try:
         obj, tz = xl_list[0], xl_list[1]
-        if check_serialisation(obj):
-            continue
         _1583 = export_1583(tz)
         logger.info(str(_1583))
         _290 = export_290(obj)
