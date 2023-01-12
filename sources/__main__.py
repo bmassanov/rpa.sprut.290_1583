@@ -158,6 +158,7 @@ def fill_excel(path_1583, path_290, branch_index, name):
     xlsx.init(MONTHS)
     print(result)
     xlsx.fill(result)
+    return xlsx.file_path
 
 
 if __name__ == '__main__':
